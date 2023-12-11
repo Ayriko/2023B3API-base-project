@@ -1,10 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
-
-export enum UserRole {
-  Employee = 'Employee',
-  Admin = 'Admin',
-  ProjectManager = 'ProjectManager',
-}
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { UserRole } from '../../role.enum';
+import { ProjectUser } from '../../project-users/entities/project-user.entity';
+import { Project } from '../../projects/entities/project.entity';
 
 @Entity()
 export class User {
@@ -22,4 +19,10 @@ export class User {
 
   @Column({ default: UserRole.Employee })
   role: UserRole;
+
+  @OneToMany(() => ProjectUser, (projectUser: ProjectUser) => projectUser.user)
+  projectUser: ProjectUser[];
+
+  @OneToMany(() => Project, (project: Project) => project.referringEmployee)
+  projects: Project[];
 }

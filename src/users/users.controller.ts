@@ -2,24 +2,27 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
+  ParseUUIDPipe,
   Post,
   Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { Request } from 'express';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UsersService } from './users.service';
 import { SignInDto } from './dto/signIn.dto';
-import { AuthGuard } from './auth.guard';
+import { AuthGuard } from '../auth.guard';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post(':auth/sign-up')
+  @Post('auth/sign-up')
   @UsePipes(ValidationPipe)
   create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
@@ -31,9 +34,10 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard)
-  @Get(':me')
-  getUser(@Req() req: any) {
-    return this.usersService.findOne(req.user.sub);
+  @Get('me')
+  getUser(@Req() req: Request) {
+    const user = req.user as { id: string; email: string; role: string };
+    return this.usersService.findOne(user.id);
   }
 
   @UseGuards(AuthGuard)
@@ -41,19 +45,12 @@ export class UsersController {
   findAll() {
     return this.usersService.findAll();
   }
-  @UseGuards(AuthGuard)
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  async findOne(@Param('id', new ParseUUIDPipe()) id: string) {
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-  //   return this.usersService.update(id, updateUserDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.usersService.remove(id);
-  // }
 }

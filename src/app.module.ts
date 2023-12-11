@@ -1,9 +1,14 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
-import { ProjectsModule } from './projects/projects.module';
 import { User } from './users/entities/user.entity';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { RolesGuard } from './role.guard';
+import { ProjectsModule } from './projects/projects.module';
+import { ProjectUsersModule } from './project-users/project-users.module';
+import { ProjectUser } from './project-users/entities/project-user.entity';
+import { Project } from './projects/entities/project.entity';
 
 @Module({
   imports: [
@@ -17,15 +22,21 @@ import { User } from './users/entities/user.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [User],
+        entities: [User, ProjectUser, Project],
         synchronize: true,
       }),
       inject: [ConfigService],
     }),
     UsersModule,
     ProjectsModule,
+    ProjectUsersModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe,
+    },
+  ],
 })
 export class AppModule {}

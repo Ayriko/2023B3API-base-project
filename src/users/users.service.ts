@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
@@ -35,7 +34,7 @@ export class UsersService {
     if (isMatch == false) {
       throw new UnauthorizedException();
     }
-    const payload = { sub: user.id, email: user.email };
+    const payload = { id: user.id, email: user.email, role: user.role };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
@@ -45,7 +44,7 @@ export class UsersService {
     return this.usersRepository.find();
   }
 
-  async findOne(id: string): Promise<User> {
+  async findOne(id: string): Promise<User | null> {
     return this.usersRepository.findOne({
       select: ['id', 'username', 'email', 'role'],
       where: { id: id },
@@ -57,19 +56,5 @@ export class UsersService {
       select: ['id', 'username', 'email', 'role', 'password'],
       where: { email: email },
     });
-  }
-
-  update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
-    const user: User = new User();
-    user.username = updateUserDto.username;
-    user.email = updateUserDto.email;
-    user.password = updateUserDto.password;
-    user.role = updateUserDto.role;
-    user.id = id;
-    return this.usersRepository.save(user);
-  }
-
-  async remove(id: string): Promise<void> {
-    await this.usersRepository.delete(id);
   }
 }
