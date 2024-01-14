@@ -1,5 +1,8 @@
 import {
   ConflictException,
+  ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -15,6 +18,7 @@ export class ProjectUsersService {
   constructor(
     @InjectRepository(ProjectUser)
     private readonly ProjectUsersRepository: Repository<ProjectUser>,
+    @Inject(forwardRef(() => ProjectsService))
     private readonly projectsService: ProjectsService,
     private readonly usersService: UsersService,
   ) {}
@@ -81,5 +85,22 @@ export class ProjectUsersService {
         id: projectId,
       },
     });
+  }
+  async getProjectIdsByUser(userId: string): Promise<string[]> {
+    const projectUsers = await this.ProjectUsersRepository.find({
+      select: ['projectId'],
+      where: { userId: userId },
+    });
+    return projectUsers.map((projectUser) => projectUser.projectId);
+  }
+
+  async userInProject(projectId: string, userId: string) {
+    try {
+      await this.ProjectUsersRepository.findOneOrFail({
+        where: { projectId: projectId, userId: userId },
+      });
+    } catch {
+      throw new ForbiddenException();
+    }
   }
 }

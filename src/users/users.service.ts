@@ -5,6 +5,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { EventsService } from '../events/events.service';
 
 //we can inject the UsersRepository into the UsersService using the @InjectRepository() decorator
 //we use dto when there is incoming data
@@ -15,6 +16,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private jwtService: JwtService,
+    private readonly eventsService: EventsService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -56,5 +58,32 @@ export class UsersService {
       select: ['id', 'username', 'email', 'role', 'password'],
       where: { email: email },
     });
+  }
+
+  async getVouchers(month: number, userId: string): Promise<number> {
+    const firstMonthDay = new Date(new Date().getFullYear(), month - 1, 1);
+    const lastMonthDay = new Date(new Date().getFullYear(), month, 0);
+
+    let numberOfWeekdays = 0;
+    const currentDate = new Date(firstMonthDay);
+
+    while (currentDate <= lastMonthDay) {
+      if (this.isWeekday(currentDate)) {
+        numberOfWeekdays++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    const numberOfEventsInMonth = await this.eventsService.numberOfEventInMonth(
+      userId,
+      month,
+    );
+
+    return (numberOfWeekdays - numberOfEventsInMonth) * 8;
+  }
+
+  private isWeekday(date: Date): boolean {
+    const dayOfWeek = date.getDay();
+    return dayOfWeek !== 0 && dayOfWeek !== 6;
   }
 }

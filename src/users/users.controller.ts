@@ -53,4 +53,9 @@ export class UsersController {
     }
     return user;
   }
+
+  @Get(':id/meal-vouchers/:month')
+  public(@Param('id') userId: string, @Param('month') month: number) {
+    return this.usersService.getVouchers(month, userId);
+  }
 }

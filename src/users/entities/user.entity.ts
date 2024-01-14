@@ -23,6 +23,6 @@ export class User {
   @OneToMany(() => ProjectUser, (projectUser: ProjectUser) => projectUser.user)
   projectUser: ProjectUser[];
 
-  @OneToMany(() => Project, (project: Project) => project.referringEmployee)
-  projects: Project[];
+  //@OneToMany(() => Project, (project: Project) => project.referringEmployee)
+  //projects: Project[];
 }

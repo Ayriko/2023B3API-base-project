@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -25,6 +26,7 @@ export class Project {
   )
   projectUser: ProjectUser[];
 
-  @ManyToOne(() => User, (user: User) => user.projects)
+  @ManyToOne(() => User, (user) => user.id)
+  @JoinColumn({ name: 'referringEmployeeId' })
   referringEmployee: User;
 }
